@@ -51,7 +51,7 @@ final_path=/opt/yunohost/$app
 test ! -e "$final_path" || ynh_die "This path already contains a folder"
 
 # Normalize the url path syntax
-path_url=$(ynh_normalize_url_path $path)
+path_url=$(ynh_normalize_url_path $path_url)
 
 # Check web path availability
 ynh_webpath_available $domain $path
