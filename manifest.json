@@ -40,8 +40,8 @@
                     "en": "Choose a path for OnlyOffice",
                     "fr": "Choisissez un chemin pour OnlyOffice"
                 },
-                "example": "/onlyffice",
-                "default": "/onlyffice"
+                "example": "/onlyoffice",
+                "default": "/onlyoffice"
             }
 
         ]
