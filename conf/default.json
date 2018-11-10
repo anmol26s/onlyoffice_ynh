@@ -67,7 +67,7 @@
 				"headers": {
 					"userAgent": "Node.js/6.13"
 				},
-				"rejectUnauthorized": false # Fix https://github.com/ONLYOFFICE/onlyoffice-owncloud/issues/172#issuecomment-411746394
+				"rejectUnauthorized": false // Fix https://github.com/ONLYOFFICE/onlyoffice-owncloud/issues/172#issuecomment-411746394
 			},
 			"autoAssembly": {
 				"enable": false,
@@ -140,7 +140,7 @@
 					"browser": false,
 					"request": {
 						"inbox": false,
-						"outbox": true # Fix https://github.com/ONLYOFFICE/onlyoffice-owncloud/issues/172#issuecomment-411746394
+						"outbox": true // Fix https://github.com/ONLYOFFICE/onlyoffice-owncloud/issues/172#issuecomment-411746394
 					}
 				},
 				"browser": {
