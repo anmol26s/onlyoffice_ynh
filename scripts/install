@@ -51,12 +51,12 @@ final_path=/opt/yunohost/$app
 test ! -e "$final_path" || ynh_die "This path already contains a folder"
 
 # Normalize the url path syntax
-path_url=$(ynh_normalize_url_path $path_url)
+path_url=$(ynh_normalize_url_path /onlyoffice)
 
 # Check web path availability
-ynh_webpath_available $domain $path
+ynh_webpath_available $domain /onlyoffice
 # Register (book) web path
-ynh_webpath_register $app $domain $path
+ynh_webpath_register $app $domain /onlyoffice
 
 #=================================================
 # STORE SETTINGS FROM MANIFEST
