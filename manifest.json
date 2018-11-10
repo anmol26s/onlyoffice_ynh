@@ -16,7 +16,7 @@
     "requirements": {
         "yunohost": ">= 2.7.2"
     },
-    "multi_instance": true,
+    "multi_instance": false,
     "services": [
         "nginx",
         "php5-fpm",
@@ -37,11 +37,11 @@
                 "name": "path",
                 "type": "path",
                 "ask": {
-                    "en": "Choose a path for OnlyOffice",
-                    "fr": "Choisissez un chemin pour OnlyOffice"
+                    "en": "Choose a path for OnlyOffice / is accepted",
+                    "fr": "Choisissez un chemin pour OnlyOffice uniquement / est accepté"
                 },
-                "example": "/onlyoffice",
-                "default": "/onlyoffice"
+                "example": "/",
+                "default": "/"
             }
 
         ]
