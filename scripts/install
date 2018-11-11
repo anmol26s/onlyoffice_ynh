@@ -151,7 +151,7 @@ ynh_add_nginx_config
 ### you can make a backup of this file before modifying it again if the admin had modified it.
 
 # Calculate and store the config file checksum into the app settings
-ynh_store_file_checksum "/etc/onlyoffice/documentserver/nginx/onlyoffice-documentserver.conf"
+#ynh_store_file_checksum "/etc/onlyoffice/documentserver/nginx/onlyoffice-documentserver.conf"
 
 
 #=================================================
