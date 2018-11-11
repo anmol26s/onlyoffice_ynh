@@ -8,6 +8,7 @@
 
 source _common.sh
 source /usr/share/yunohost/helpers
+source psql.sh
 
 #=================================================
 # MANAGE SCRIPT FAILURE
@@ -26,7 +27,7 @@ ynh_abort_if_errors
 
 # Retrieve arguments
 domain=$YNH_APP_ARG_DOMAIN
-#port=$YNH_APP_ARG_PORT
+path_url=$YNH_APP_ARG_PATH
 
 ### If it's a multi-instance app, meaning it can be installed several times independently
 ### The id of the app as stated in the manifest is available as $YNH_APP_ID
@@ -50,19 +51,19 @@ final_path=/opt/yunohost/$app
 test ! -e "$final_path" || ynh_die "This path already contains a folder"
 
 # Normalize the url path syntax
-path_url=$(ynh_normalize_url_path /)
+path_url=$(ynh_normalize_url_path $path_url)
 
 # Check web path availability
-ynh_webpath_available $domain /
+ynh_webpath_available $domain $path_url
 # Register (book) web path
-ynh_webpath_register $app $domain /
+ynh_webpath_register $app $domain $path_url
 
 #=================================================
 # STORE SETTINGS FROM MANIFEST
 #=================================================
 
 ynh_app_setting_set $app domain $domain
-#ynh_app_setting_set $app port $port
+ynh_app_setting_set $app path $path_url
 
 #=================================================
 # FIND AND OPEN A PORT
@@ -82,16 +83,23 @@ ynh_app_setting_set $app port $port
 #==============================================
 # INSTALL POSTGRES
 #==============================================
-#Next for new test 5
-ynh_install_app_dependencies postgresql redis-server apt-transport-https libasound2 libboost-regex-dev libboost1.62-dev libdrm-amdgpu1 libdrm-intel1 libdrm-nouveau2 libdrm-radeon1 libdrm2 libfontenc1 libgail-common libgail18 libgconf-2-4 libgconf2-4 libgl1-mesa-dri libgl1-mesa-glx libglapi-mesa libglu1-mesa libgtk2.0-0 libgtk2.0-bin libgtk2.0-common libgtkglext1 libice6 libicu-dev libllvm3.9 libpangox-1.0-0 libpciaccess0 librsvg2-2 librsvg2-common libsm6 libtxc-dxtn-s2tc libx11-xcb1 libxaw7 libxcb-dri2-0 libxcb-dri3-0 libxcb-glx0 libxcb-present0 libxcb-sync1 libxcomposite1 libxcursor1 libxdamage1 libxfixes3 libxfont1 libxfont2 libxi6 libxinerama1 libxkbfile1 libxmu6 libxrandr2 libxshmfence1 libxt6 libxtst6 libxxf86vm1 postgresql-client pwgen python-meld3 supervisor x11-xkb-utils xfonts-base xfonts-encodings xfonts-utils xserver-common xvfb
 
+# Add erlang and Document Server for Debian Jessie  or Stretch
 
-#Work in commit : add yes
-#sudo apt-get install -y postgresql redis-server rabbitmq-server apt-transport-https
+if [ "$(lsb_release --codename --short)" == "jessie" ]; then
+	echo "deb http://packages.erlang-solutions.com/debian jessie contrib" | tee /etc/apt/sources.list.d/erlang-solutions.list
+elif 
+	[ "$(lsb_release --codename --short)" == "stretch" ]; then
+	echo "deb http://packages.erlang-solutions.com/debian stretch contrib" | tee /etc/apt/sources.list.d/erlang-solutions.list
+fi
+echo "deb http://download.onlyoffice.com/repo/debian squeeze main" | tee /etc/apt/sources.list.d/onlyoffice.list
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
+sudo wget https://packages.erlang-solutions.com/debian/erlang_solutions.asc
+sudo apt-key add erlang_solutions.asc
+sudo rm erlang_solutions.asc
 
-#Old
-# ynh_install_app_dependencies postgresql redis-server rabbitmq-server apt-transport-https
-# ynh_install_app_dependencies postgresql redis-server rabbitmq-server apt-transport-https libcurl3 libxml2 supervisor fonts-dejavu fonts-liberation ttf-mscorefonts-installer fonts-crosextra-carlito fonts-takao-gothic fonts-opensymbol
+# Install Dependencies
+ynh_install_app_dependencies postgresql redis-server apt-transport-https onlyoffice-documentserver rabbitmq-server
 
 #=================================================
 # INSTALL NODEJS
@@ -100,25 +108,19 @@ ynh_install_app_dependencies postgresql redis-server apt-transport-https libasou
 
 ynh_install_nodejs 8.12.0
 
-#Work in commit : add yes
-#curl -sL https://deb.nodesource.com/setup_8.x | sudo bash -
+#=================================================
+# DATABASE SETUP
+#=================================================
 
-#===============================================
-# ADD ONLYOFFCE REPOSITORY
-#===============================================
-
-#Work in commit : add yes
-#apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys CB2DE8E5
-#echo "deb http://download.onlyoffice.com/repo/debian squeeze main" | sudo tee /etc/apt/sources.list.d/onlyoffice.list
-#ynh_package_update
-
-#==============================================
-# CREATE DB
-#==============================================
-
-sudo -i -u postgres psql -c "CREATE DATABASE onlyoffice;"
-sudo -i -u postgres psql -c "CREATE USER onlyoffice WITH password 'onlyoffice';"
-sudo -i -u postgres psql -c "GRANT ALL privileges ON DATABASE onlyoffice TO onlyoffice;"
+# Create postgresql database
+db_name="${app}"
+db_pwd=$(ynh_string_random 30)
+ynh_app_setting_set "$app" psql_db "$db_name"
+ynh_app_setting_set "$app" psqlpwd "$db_pwd"
+ynh_psql_test_if_first_run
+ynh_psql_create_user "$app" "$db_pwd"
+ynh_psql_execute_as_root \
+"CREATE DATABASE $db_name ENCODING 'UTF8' LC_COLLATE='C' LC_CTYPE='C' template=template0 OWNER $app;"
 
 #==============================================
 # DEFINE PORT
@@ -126,31 +128,12 @@ sudo -i -u postgres psql -c "GRANT ALL privileges ON DATABASE onlyoffice TO only
 
 echo onlyoffice-documentserver onlyoffice/ds-port select ${port} | sudo debconf-set-selections
 
-#==============================================
-# INSTALL ONLYOFFICE
-#==============================================
-
-ynh_package_install_from_equivs ../conf/fakenode-deps.control
-ynh_package_install_from_equivs ../conf/fakepostgres-deps.control
-wget --no-verbose https://github.com/ONLYOFFICE/DocumentServer/releases/download/ONLYOFFICE-DocumentServer-5.2.3/onlyoffice-documentserver_amd64.deb
-dpkg --install onlyoffice-documentserver_amd64.deb
-
-#Work in commit : add yes
-#sudo apt-get install -y onlyoffice-documentserver
-
 #=================================================
 # NGINX CONFIGURATION
 #=================================================
 
 # Create a dedicated nginx config
 ynh_add_nginx_config
-
-#=================================================
-# CREATE DEDICATED USER
-#=================================================
-
-# Create a system user
-ynh_system_user_create $app
 
 #=================================================
 # MODIFY A CONFIG FILE

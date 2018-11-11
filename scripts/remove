@@ -8,6 +8,7 @@
 
 source _common.sh
 source /usr/share/yunohost/helpers
+source psql.sh
 
 #=================================================
 # LOAD SETTINGS
@@ -17,7 +18,6 @@ app=$YNH_APP_INSTANCE_NAME
 
 domain=$(ynh_app_setting_get $app domain)
 port=$(ynh_app_setting_get $app port)
-final_path=$(ynh_app_setting_get $app final_path)
 
 #=================================================
 # STANDARD REMOVE
@@ -59,24 +59,17 @@ fi
 # REMOVE THE CRON FILE
 #=================================================
 
-# Remove a cron file
-ynh_secure_remove "/etc/cron.d/$app"
 
 # Remove a directory securely
 ynh_secure_remove "/etc/apt/sources.list.d/onlyoffice.list"
+ynh_secure_remove "/etc/apt/sources.list.d/erlang-solutions.list"
 
-# Remove DB
-sudo -i -u postgres psql -c "DROP DATABASE onlyoffice;"
-sudo -i -u postgres psql -c "DROP USER onlyoffice;"
+#=================================================
+# REMOVE THE MYSQL DATABASE
+#=================================================
+
+# Remove a database if it exists, along with the associated user
+ynh_psql_remove_db "$db_name" "$app"
 
 # Remove the log files
 ynh_secure_remove "/var/log/$app/"
-
-#=================================================
-# GENERIC FINALIZATION
-#=================================================
-# REMOVE DEDICATED USER
-#=================================================
-
-# Delete a system user
-ynh_system_user_delete $app

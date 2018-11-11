@@ -10,8 +10,7 @@
     "license": "free",
     "maintainer": {
         "name": "liberodark",
-        "email": "liberodark@gmail.com",
-        "url": "https://onlyoffice.com"
+        "email": "liberodark@gmail.com"
     },
     "requirements": {
         "yunohost": ">= 2.7.2"
