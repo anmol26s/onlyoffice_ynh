@@ -99,7 +99,7 @@ sudo apt-key add erlang_solutions.asc
 sudo rm erlang_solutions.asc
 
 # Install Dependencies
-ynh_install_app_dependencies postgresql redis-server apt-transport-https onlyoffice-documentserver rabbitmq-server
+ynh_install_app_dependencies postgresql redis-server apt-transport-https 
 
 #=================================================
 # INSTALL NODEJS
